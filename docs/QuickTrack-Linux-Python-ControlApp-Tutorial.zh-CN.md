@@ -97,6 +97,26 @@ sudo python3 ./app.py --interface wlan0
 
 应用从仓库根目录运行，依赖同级包导入（`Commands`、`api`、`interfaces` 等）。若使用虚拟环境，在仓库根目录激活后执行 `python3 ./app.py` 即可。
 
+### 3.6 本地验证控制面（模拟 QuickTrack 工具）
+
+仓库提供 UDP 客户端脚本 [`tools/quicktrack_sim_client.py`](../tools/quicktrack_sim_client.py)，可在**与 DUT 网络互通的任意机器**上（或本机）向控制应用发送与 QuickTrack 工具相同格式的二进制报文，并读取 **`CMD_ACK` + `CMD_RESPONSE`**，用于快速检查端口、协议与部分 API 是否可用。
+
+在**仓库根目录**执行示例：
+
+```bash
+# 默认与安全探测等价：仅 GET_CONTROL_APP_VERSION、GET_IP_ADDR、GET_MAC_ADDR（空 TLV）
+python3 tools/quicktrack_sim_client.py --host <DUT_IP> --port 9004
+
+python3 tools/quicktrack_sim_client.py --host <DUT_IP> --safe-probe
+
+# 单条命令（枚举名同 QuickTrackMessageType）
+python3 tools/quicktrack_sim_client.py --host <DUT_IP> --command GET_CONTROL_APP_VERSION
+```
+
+`--all-commands` 会依次发送除 `CMD_ACK`/`CMD_RESPONSE` 外的全部命令字，**可能关联/断线/启停 AP/复位等**，仅允许在隔离实验台使用，且必须同时传入 `--i-understand-risk`。
+
+脚本退出码：安全探测或单次命令路径下，若各条响应 TLV 中 **STATUS 均为 `0`** 则返回 0，否则返回 1。
+
 ---
 
 ## 第 4 章：外部命令与路径约定（`iw`、`wpa_supplicant`、`wpa_cli` 等）
